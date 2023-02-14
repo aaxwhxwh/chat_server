@@ -13,7 +13,7 @@ import requests
 from config import Config
 from server import celery_app
 
-logger = logging.getLogger(__name__)
+logger = logging.getLogger("root")
 
 
 class ChatBot:
