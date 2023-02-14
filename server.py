@@ -6,6 +6,10 @@ from flask import Flask, request, Response
 from WXBizMsgCrypt3 import WXBizMsgCrypt
 from celery_tasks import chat_bot_prompt
 
+from config import (
+    CORP_ID, TOKEN, ENCODING_AES_KEY
+)
+
 app = Flask(__name__)
 
 logger = logging.getLogger(__name__)
@@ -19,10 +23,8 @@ def hello_world():
 
 @app.route("/work/callback", methods=["GET", "POST"])
 def work_callback():
-    s_token = ""
-    s_encoding_aes_key = ""
-    s_corp_id = ""
-    wx_cpt = WXBizMsgCrypt(s_token, s_encoding_aes_key, s_corp_id)
+
+    wx_cpt = WXBizMsgCrypt(TOKEN, ENCODING_AES_KEY, CORP_ID)
     if request.method == "GET":
         params = request.args
         echo_str = params["echostr"]

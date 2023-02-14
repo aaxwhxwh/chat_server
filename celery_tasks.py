@@ -11,9 +11,14 @@ import openai
 import requests
 from celery import Celery
 
+from config import (
+    CORP_SECRET, CORP_ID, OPENAI_KEY,
+    OPENAI_ORG, OPENAI_MODEL, REDIS_URL
+)
+
 logger = logging.getLogger(__name__)
 
-celery_app = Celery("tasks", broker="redis://127.0.0.1:6379/1")
+celery_app = Celery("tasks", broker=REDIS_URL)
 
 
 class ChatBot:
@@ -35,7 +40,8 @@ class ChatBot:
                 max_tokens=max_tokens,
                 top_p=top_p,
                 frequency_penalty=frequency_penalty,
-                presence_penalty=presence_penalty
+                presence_penalty=presence_penalty,
+                timeout=10
             )
             # print(time()-a)
             # print(prompt_text)
@@ -44,7 +50,8 @@ class ChatBot:
             self.log(f'''exec time :{time() - a},response:{resp}''')
             return resp
         except Exception as e:
-            print(str(e))
+            # print(str(e))
+            print(traceback.format_exc())
             self.log(traceback.format_exc())
 
     def log(self, msg):
@@ -52,23 +59,13 @@ class ChatBot:
             self.logger.info(msg)
 
 
-# openai参数
-OPENAI_ORG = ''
-OPENAI_KEY = ""
-OPENAI_MODEL = ''  # text-ada-001 text-davinci-003
-
 chat_bot = ChatBot(organization=OPENAI_ORG, api_key=OPENAI_KEY, model=OPENAI_MODEL, logger=logger)
 
 
-
-
 def get_access_token():
-    corp_id = ""
-    corp_secret = ""
-    url = f"https://qyapi.weixin.qq.com/cgi-bin/gettoken?corpid={corp_id}&corpsecret={corp_secret}"
+
+    url = f"https://qyapi.weixin.qq.com/cgi-bin/gettoken?corpid={CORP_ID}&corpsecret={CORP_SECRET}"
     resp = requests.get(url)
-    print(resp.status_code)
-    print(resp.json())
     return resp.json()["access_token"]
 
 
@@ -76,21 +73,23 @@ def send_msg(to_user_id, text):
     access_token = get_access_token()
     url = f"https://qyapi.weixin.qq.com/cgi-bin/message/send?access_token={access_token}"
     data = {
-       "touser" : to_user_id,
-       "msgtype" : "text",
-       "agentid" : 1000006,
-       "text" : {
-           "content" : text
-       },
-       # "safe":0,
-       # "enable_id_trans": 0,
-       # "enable_duplicate_check": 0,
-       # "duplicate_check_interval": 1800
+        "touser": to_user_id,
+        "msgtype": "text",
+        "agentid": 1000006,
+        "text": {
+            "content": text
+        }
     }
     resp = requests.post(url, json=data)
 
 
-@celery_app.task
-def chat_bot_prompt(to_user_id, text):
-    resp_content = chat_bot.prompt(text)
+@celery_app.task(bind=True, max_retries=5)
+def chat_bot_prompt(self, to_user_id, text):
+    try:
+        resp_content = chat_bot.prompt(text)
+    except Exception as e:
+        raise self.retry(exc=e, countdown=1)
+    if resp_content is None:
+        print("获取chat信息异常")
+        return
     send_msg(to_user_id, resp_content)
