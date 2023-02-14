@@ -45,9 +45,9 @@ class ChatBot:
             self.logger.info(msg)
 
 # openai参数
-OPENAI_ORG = 'org-cJOuskbI6DaXGptChpPsv5oA'
-OPENAI_KEY = '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'
-OPENAI_MODEL = 'text-davinci-003' # text-ada-001 text-davinci-003
+OPENAI_ORG = ''
+OPENAI_KEY = ''
+OPENAI_MODEL = '' # text-ada-001 text-davinci-003
 
 chat_bot = ChatBot(organization=OPENAI_ORG,api_key=OPENAI_KEY,model=OPENAI_MODEL,logger=logger)
 
