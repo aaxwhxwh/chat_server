@@ -11,14 +11,11 @@ import openai
 import requests
 from celery import Celery
 
-from config import (
-    CORP_SECRET, CORP_ID, OPENAI_KEY,
-    OPENAI_ORG, OPENAI_MODEL, REDIS_URL
-)
+from config import Config
 
 logger = logging.getLogger(__name__)
 
-celery_app = Celery("tasks", broker=REDIS_URL)
+celery_app = Celery("tasks", broker=Config.REDIS_URL)
 
 
 class ChatBot:
@@ -59,12 +56,12 @@ class ChatBot:
             self.logger.info(msg)
 
 
-chat_bot = ChatBot(organization=OPENAI_ORG, api_key=OPENAI_KEY, model=OPENAI_MODEL, logger=logger)
+chat_bot = ChatBot(organization=Config.OPENAI_ORG, api_key=Config.OPENAI_KEY, model=Config.OPENAI_MODEL, logger=logger)
 
 
 def get_access_token():
 
-    url = f"https://qyapi.weixin.qq.com/cgi-bin/gettoken?corpid={CORP_ID}&corpsecret={CORP_SECRET}"
+    url = f"https://qyapi.weixin.qq.com/cgi-bin/gettoken?corpid={Config.CORP_ID}&corpsecret={Config.CORP_SECRET}"
     resp = requests.get(url)
     return resp.json()["access_token"]
 

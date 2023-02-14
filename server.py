@@ -1,4 +1,5 @@
 import logging
+from logging.config import dictConfig
 from xml.etree import cElementTree as ET
 
 from flask import Flask, request, Response
@@ -6,14 +7,13 @@ from flask import Flask, request, Response
 from WXBizMsgCrypt3 import WXBizMsgCrypt
 from celery_tasks import chat_bot_prompt
 
-from config import (
-    CORP_ID, TOKEN, ENCODING_AES_KEY
-)
+from config import Config
 
 app = Flask(__name__)
+dictConfig(Config.LOG_PATTERN)
+app.config.from_object(Config)
 
 logger = logging.getLogger(__name__)
-
 
 
 @app.route("/")
@@ -24,7 +24,7 @@ def hello_world():
 @app.route("/work/callback", methods=["GET", "POST"])
 def work_callback():
 
-    wx_cpt = WXBizMsgCrypt(TOKEN, ENCODING_AES_KEY, CORP_ID)
+    wx_cpt = WXBizMsgCrypt(Config.TOKEN, Config.ENCODING_AES_KEY, Config.CORP_ID)
     if request.method == "GET":
         params = request.args
         echo_str = params["echostr"]
