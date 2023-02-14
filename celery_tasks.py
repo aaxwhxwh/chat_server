@@ -9,13 +9,11 @@ from time import time
 
 import openai
 import requests
-from celery import Celery
 
 from config import Config
+from server import celery_app
 
 logger = logging.getLogger(__name__)
-
-celery_app = Celery("tasks", broker=Config.REDIS_URL)
 
 
 class ChatBot:

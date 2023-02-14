@@ -2,16 +2,18 @@ import logging
 from logging.config import dictConfig
 from xml.etree import cElementTree as ET
 
+from celery import Celery
 from flask import Flask, request, Response
 
 from WXBizMsgCrypt3 import WXBizMsgCrypt
-from celery_tasks import chat_bot_prompt
-
 from config import Config
 
 app = Flask(__name__)
 dictConfig(Config.LOG_PATTERN)
 app.config.from_object(Config)
+
+celery_app = Celery("tasks", broker=Config.REDIS_URL)
+celery_app.conf.update(app.config)
 
 logger = logging.getLogger(__name__)
 
@@ -46,5 +48,6 @@ def work_callback():
         xml_tree = ET.fromstring(s_msg)
         content = xml_tree.find("Content").text
         to_user_id = xml_tree.find("FromUserName").text
+        from celery_tasks import chat_bot_prompt
         chat_bot_prompt.delay(to_user_id, content)
         return Response()
