@@ -46,8 +46,8 @@ class ChatBot:
             return resp
         except Exception as e:
             # print(str(e))
-            print(traceback.format_exc())
             self.log(traceback.format_exc())
+            raise e
 
     def log(self, msg):
         if self.logger:
