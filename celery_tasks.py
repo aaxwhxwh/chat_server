@@ -64,13 +64,13 @@ def get_access_token():
     return resp.json()["access_token"]
 
 
-def send_msg(to_user_id, text):
+def send_msg(to_user_id, agent_id, text):
     access_token = get_access_token()
     url = f"https://qyapi.weixin.qq.com/cgi-bin/message/send?access_token={access_token}"
     data = {
         "touser": to_user_id,
         "msgtype": "text",
-        "agentid": 1000006,
+        "agentid": agent_id,
         "text": {
             "content": text
         }
@@ -79,7 +79,7 @@ def send_msg(to_user_id, text):
 
 
 @celery_app.task(bind=True, max_retries=5)
-def chat_bot_prompt(self, to_user_id, text):
+def chat_bot_prompt(self, to_user_id, agent_id, text):
     try:
         resp_content = chat_bot.prompt(text)
     except Exception as e:
@@ -87,4 +87,4 @@ def chat_bot_prompt(self, to_user_id, text):
     if resp_content is None:
         print("获取chat信息异常")
         return
-    send_msg(to_user_id, resp_content)
+    send_msg(to_user_id, agent_id, resp_content)

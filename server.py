@@ -48,6 +48,7 @@ def work_callback():
         xml_tree = ET.fromstring(s_msg)
         content = xml_tree.find("Content").text
         to_user_id = xml_tree.find("FromUserName").text
+        agent_id = xml_tree.find("AgentID").text
         from celery_tasks import chat_bot_prompt
-        chat_bot_prompt.delay(to_user_id, content)
+        chat_bot_prompt.delay(to_user_id, agent_id, content)
         return Response()
